@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Todo App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex justify-center items-center">
+    <div class="bg-white p-6 rounded shadow w-96">
+      <h1 class="text-2xl font-bold text-center mb-4">Todo App</h1>
+
+      <input
+        id="taskInput"
+        class="border p-2 w-full mb-2"
+        placeholder="Enter task"
+      />
+
+      <button
+        onclick="addTodo()"
+        class="bg-blue-500 text-white w-full py-2 rounded"
+      >
+        Add Todo
+      </button>
+
+      <ul id="todoList" class="mt-4"></ul>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:3000/todos";
+
+      async function loadTodos() {
+        const res = await fetch(API_URL);
+        const todos = await res.json();
+
+        const list = document.getElementById("todoList");
+        list.innerHTML = "";
+
+        todos.forEach((todo) => {
+          list.innerHTML += `
+      <li class="flex justify-between mt-2">
+        ${todo.task}
+        <div>
+          <button onclick="editTodo('${todo._id}', '${todo.task}')"
+            class="text-blue-500 mr-2">Edit</button>
+          <button onclick="deleteTodo('${todo._id}')"
+            class="text-red-500">X</button>
+        </div>
+      </li>
+    `;
+        });
+      }
+
+      async function addTodo() {
+        const task = document.getElementById("taskInput").value;
+
+        await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task }),
+        });
+
+        document.getElementById("taskInput").value = "";
+        loadTodos();
+      }
+
+      async function deleteTodo(id) {
+        await fetch(`${API_URL}/${id}`, {
+          method: "DELETE",
+        });
+        loadTodos();
+      }
+
+      async function editTodo(id, oldTask) {
+        const newTask = prompt("Edit task:", oldTask);
+        if (!newTask) return;
+
+        await fetch(`${API_URL}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task: newTask }),
+        });
+
+        loadTodos();
+      }
+
+      loadTodos();
+    </script>
+  </body>
+</html>
